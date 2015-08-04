@@ -10,6 +10,7 @@
  */
 #import "LY3GithubAPIClient.h"
 #import "LY2Constants.h"
+#import <Regexer.h>
 #import <AFNetworking.h>
 #import <AFOAuth2Manager/AFOAuth2Manager.h>
 #import <AFOAuth2Manager/AFHTTPRequestSerializer+OAuth2.h>
@@ -50,17 +51,17 @@ NSString *const GITHUB_API_baseURL = @"https://api.github.com";
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
     [manager.requestSerializer setAuthorizationHeaderFieldWithCredential:sessionToken];
     
-    <#returnType#> (^<#blockName#>)(<#parameterTypes#>) = ^<#returnType#>(<#parameters#>) {<#code#>};
-
-    [manager GET:getCurrentUserReposURL
-                                      parameters:[self defaultParams]
-                                         success:^(NSURLSessionDataTask *task, id responseObject) {
-                 //             NSArray *temp = (NSArray*)responseObject;
-                 //             NSLog(@"%@", [temp description]);
-             completionBlock(task, responseObject);
-         } failure:^(NSURLSessionDataTask *task, NSError *error) {
-             NSLog(@"Fail line 44: %@", error.localizedDescription);
-         }];
+    void (^GETwithPage)(NSUInteger) = ^void(NSUInteger pagination) {
+        
+        
+        
+        [manager GET:getCurrentUserReposURL parameters:[self defaultParams]
+             success:^(NSURLSessionDataTask *task, id responseObject) {
+                    completionBlock(task, responseObject);
+             } failure:^(NSURLSessionDataTask *task, NSError *error) {
+                    NSLog(@"Fail line 44: %@", error.localizedDescription);
+        }];
+    };
 }
 
 +(void)getMembershipforOrg:(NSString *)orgName WithCompletion:(void (^)(NSURLSessionDataTask *, NSArray *))completionBlock {
@@ -153,6 +154,15 @@ NSString *const GITHUB_API_baseURL = @"https://api.github.com";
          }];
 }
 
-
+-(NSUInteger)paginationFromResponseHeader:(NSHTTPURLResponse*)response {
+    NSLog(@"NSURLResponse digging: %@", [[response allHeaderFields] description]);
+    NSString *linkHeaderText = response.allHeaderFields[@"Link"];
+    NSLog(@"link header tedxt: %@", linkHeaderText);
+    NSString *rxPattern = @"\\d+(?=>; rel=\"last\")";
+    NSString *paginationString = [linkHeaderText rx_textsForMatchesWithPattern:rxPattern][0];
+    NSLog(@"pagination string: %@", paginationString);
+    
+    return [paginationString integerValue];
+}
 
 @end

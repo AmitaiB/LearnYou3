@@ -19,5 +19,6 @@
 +(void)getRepositoriesforOrg:(NSString*)orgName WithCompletion:(void (^)(NSURLSessionDataTask *task, NSArray *repos))completionBlock;
 +(void)getRepositoriesForkedFromParentRepo:(NSString *)repoFullName WithCompletion:(void (^)(NSURLSessionDataTask *task, NSArray *repos))completionBlock;
 
+-(NSUInteger)paginationFromResponseHeader:(NSHTTPURLResponse*)response;
 
 @end
