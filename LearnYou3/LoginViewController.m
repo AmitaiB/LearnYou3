@@ -18,6 +18,7 @@
 #import <DLIL.h>
 #import <DLILOperation.h>
 #import <DLILCacheManager.h>
+#import <UIProgressView+AFNetworking.h>
 
 @interface LoginViewController ()
 - (IBAction)githubButtonWasTapped:(id)sender;

@@ -17,7 +17,51 @@
 @implementation LY3GithubAPIClient
 NSString *const GITHUB_API_baseURL = @"https://api.github.com";
 
-NSDictionary * defaultParams; //??? How could I implement this?
++ (NSDictionary*)defaultParams
+{
+    static NSDictionary *params;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+    params = @{@"client_id"    : GITHUB_CLIENT_ID,
+               @"client_secret" : GITHIB_CLIENT_SECRET,
+               @"per_page"   : @"100"};
+    });
+    return params;
+}
+
++(NSDictionary *)defaultParamsWithPage:(NSInteger)pageRequested
+{
+    NSMutableDictionary *defaultsWithPage = [[LY3GithubAPIClient defaultParams] mutableCopy];
+    [defaultsWithPage setObject:@(pageRequested) forKey:@"page"];
+    return [defaultsWithPage copy];
+}
+
++(void)getCurrentUserRepositoriesWithCompletion:(void (^)(NSURLSessionDataTask *, NSArray *))completionBlock {
+    NSString *getCurrentUserReposURL = [NSString stringWithFormat:@"%@/user/repos", GITHUB_API_baseURL];
+    
+        //    AFOAuth2Manager *authManager = [AFOAuth2Manager alloc] initWithBaseURL:<#(NSURL *)#> clientID:<#(NSString *)#> secret:<#(NSString *)#>
+    
+//    NSDictionary *params = @{@"client_id" : GITHUB_CLIENT_ID,
+//                             @"client_secret" : GITHIB_CLIENT_SECRET,
+//                             @"per_page" : @"100"};
+//    
+    AFOAuthCredential *sessionToken = [AFOAuthCredential retrieveCredentialWithIdentifier:@"githubOAuthToken"];
+    
+    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+    [manager.requestSerializer setAuthorizationHeaderFieldWithCredential:sessionToken];
+    
+    <#returnType#> (^<#blockName#>)(<#parameterTypes#>) = ^<#returnType#>(<#parameters#>) {<#code#>};
+
+    [manager GET:getCurrentUserReposURL
+                                      parameters:[self defaultParams]
+                                         success:^(NSURLSessionDataTask *task, id responseObject) {
+                 //             NSArray *temp = (NSArray*)responseObject;
+                 //             NSLog(@"%@", [temp description]);
+             completionBlock(task, responseObject);
+         } failure:^(NSURLSessionDataTask *task, NSError *error) {
+             NSLog(@"Fail line 44: %@", error.localizedDescription);
+         }];
+}
 
 +(void)getMembershipforOrg:(NSString *)orgName WithCompletion:(void (^)(NSURLSessionDataTask *, NSArray *))completionBlock {
     NSString *getOrgMembershipURL = [NSString stringWithFormat:@"%@/orgs/%@/members?", GITHUB_API_baseURL, orgName];
@@ -38,7 +82,7 @@ NSDictionary * defaultParams; //??? How could I implement this?
          success:^(NSURLSessionDataTask *task, id responseObject) {
              completionBlock(task, responseObject);
          } failure:^(NSURLSessionDataTask *task, NSError *error) {
-             NSLog(@"Fail line 34: %@", error.localizedDescription);
+             NSLog(@"Fail line 67: %@", error.localizedDescription);
          }];
 }
 
@@ -60,7 +104,7 @@ NSDictionary * defaultParams; //??? How could I implement this?
          success:^(NSURLSessionDataTask *task, id responseObject) {
              completionBlock(task, responseObject);
          } failure:^(NSURLSessionDataTask *task, NSError *error) {
-             NSLog(@"Fail line 52: %@", error.localizedDescription);
+             NSLog(@"Fail line 89: %@", error.localizedDescription);
          }];
 }
 
@@ -82,35 +126,10 @@ NSDictionary * defaultParams; //??? How could I implement this?
          success:^(NSURLSessionDataTask *task, id responseObject) {
              completionBlock(task, responseObject);
          } failure:^(NSURLSessionDataTask *task, NSError *error) {
-             NSLog(@"Fail line 71: %@", error.localizedDescription);
+             NSLog(@"Fail line 111: %@", error.localizedDescription);
          }];
 }
 
-+(void)getCurrentUserRepositoriesWithCompletion:(void (^)(NSURLSessionDataTask *, NSArray *))completionBlock {
-    NSString *getCurrentUserReposURL = [NSString stringWithFormat:@"%@/user/repos", GITHUB_API_baseURL];
-    
-//    AFOAuth2Manager *authManager = [AFOAuth2Manager alloc] initWithBaseURL:<#(NSURL *)#> clientID:<#(NSString *)#> secret:<#(NSString *)#>
-    
-    NSDictionary *params = @{@"client_id" : GITHUB_CLIENT_ID,
-                             @"client_secret" : GITHIB_CLIENT_SECRET,
-                             @"per_page" : @"100"};
-    
-    AFOAuthCredential *sessionToken = [AFOAuthCredential retrieveCredentialWithIdentifier:@"githubOAuthToken"];
-    
-    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
-    
-    [manager.requestSerializer setAuthorizationHeaderFieldWithCredential:sessionToken];
-    
-    [manager GET:getCurrentUserReposURL
-      parameters:params
-         success:^(NSURLSessionDataTask *task, id responseObject) {
-//             NSArray *temp = (NSArray*)responseObject;
-//             NSLog(@"%@", [temp description]);
-             completionBlock(task, responseObject);
-         } failure:^(NSURLSessionDataTask *task, NSError *error) {
-             NSLog(@"Fail line 90: %@", error.localizedDescription);
-         }];
-}
 
 +(void)getRepositoriesForkedFromParentRepo:(NSString *)repoFullName WithCompletion:(void (^)(NSURLSessionDataTask *, NSArray *))completionBlock {
     NSString *getRepoForksURL = [NSString stringWithFormat:@"%@/repos/%@/forks", GITHUB_API_baseURL, repoFullName]; //Fullname = owner|org : repoName, e.g., "octocat/helloWorld"
@@ -130,7 +149,7 @@ NSDictionary * defaultParams; //??? How could I implement this?
          success:^(NSURLSessionDataTask *task, id responseObject) {
              completionBlock(task, responseObject);
          } failure:^(NSURLSessionDataTask *task, NSError *error) {
-             NSLog(@"Fail line 108: %@", error.localizedDescription);
+             NSLog(@"Fail line 134: %@", error.localizedDescription);
          }];
 }
 

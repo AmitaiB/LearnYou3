@@ -10,10 +10,13 @@
 
 @interface LY3GithubAPIClient : NSObject
 
++(NSDictionary*)defaultParams;
++(NSDictionary*)defaultParamsWithPage:(NSInteger)pageRequested;
+
++(void)getCurrentUserRepositoriesWithCompletion:(void (^)(NSURLSessionDataTask *task, NSArray *repos))completionBlock;
++(void)getRepositoriesforUser:(NSString*)userName WithCompletion:(void (^)(NSURLSessionDataTask *task, NSArray *repos))completionBlock;
 +(void)getMembershipforOrg:(NSString*)orgName WithCompletion:(void (^)(NSURLSessionDataTask *task, NSArray *repos))completionBlock;
 +(void)getRepositoriesforOrg:(NSString*)orgName WithCompletion:(void (^)(NSURLSessionDataTask *task, NSArray *repos))completionBlock;
-+(void)getRepositoriesforUser:(NSString*)userName WithCompletion:(void (^)(NSURLSessionDataTask *task, NSArray *repos))completionBlock;
-+(void)getCurrentUserRepositoriesWithCompletion:(void (^)(NSURLSessionDataTask *task, NSArray *repos))completionBlock;
 +(void)getRepositoriesForkedFromParentRepo:(NSString *)repoFullName WithCompletion:(void (^)(NSURLSessionDataTask *task, NSArray *repos))completionBlock;
 
 
