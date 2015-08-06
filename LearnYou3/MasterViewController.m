@@ -39,7 +39,14 @@
     __block NSMutableArray *results = [NSMutableArray new];
     __block NSMutableArray *raw = [NSMutableArray new];
     __block NSUInteger pagination = 1;
-    
+    /**
+     *  process me differently! Spelunk in the method, not here!
+     *
+     *  @param task  <#task description#>
+     *  @param repos <#repos description#>
+     *
+     *  @return <#return value description#>
+     */
     [LY3GithubAPIClient getCurrentUserRepositoriesWithCompletion:^(NSURLSessionDataTask *task, NSArray *repos) {
             //Populates an array with the repos requested.
         for (NSDictionary *repo in repos) {

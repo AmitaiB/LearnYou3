@@ -37,31 +37,42 @@ NSString *const GITHUB_API_baseURL = @"https://api.github.com";
     return [defaultsWithPage copy];
 }
 
-+(void)getCurrentUserRepositoriesWithCompletion:(void (^)(NSURLSessionDataTask *, NSArray *))completionBlock {
-    NSString *getCurrentUserReposURL = [NSString stringWithFormat:@"%@/user/repos", GITHUB_API_baseURL];
++(NSArray*)getCurrentUserRepositoriesWithCompletion:(void (^)(NSURLSessionDataTask *, NSArray *))completionBlock {
     
-        //    AFOAuth2Manager *authManager = [AFOAuth2Manager alloc] initWithBaseURL:<#(NSURL *)#> clientID:<#(NSString *)#> secret:<#(NSString *)#>
-    
-//    NSDictionary *params = @{@"client_id" : GITHUB_CLIENT_ID,
-//                             @"client_secret" : GITHIB_CLIENT_SECRET,
-//                             @"per_page" : @"100"};
-//    
-    AFOAuthCredential *sessionToken = [AFOAuthCredential retrieveCredentialWithIdentifier:@"githubOAuthToken"];
-    
+        //First, declare the session and manager, and URL of target API endpoint...
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+    AFOAuthCredential *sessionToken = [AFOAuthCredential retrieveCredentialWithIdentifier:@"githubOAuthToken"];
     [manager.requestSerializer setAuthorizationHeaderFieldWithCredential:sessionToken];
-    
+    NSString *getCurrentUserReposURL = [NSString stringWithFormat:@"%@/user/repos", GITHUB_API_baseURL];
+        //Second, the container that will return the information.
+    __block NSMutableArray *repos = [NSMutableArray new];
+
+        //Third, define the engine of our requests, which we will call very soon, enclosing it in a block and looping...
     void (^GETwithPage)(NSUInteger) = ^void(NSUInteger pagination) {
-        
-        
-        
-        [manager GET:getCurrentUserReposURL parameters:[self defaultParams]
+        [manager GET:getCurrentUserReposURL parameters:[self defaultParamsWithPage:pagination]
              success:^(NSURLSessionDataTask *task, id responseObject) {
-                    completionBlock(task, responseObject);
+                 for (NSDictionary *repo in responseObject) {
+                     [repos addObject:repo[@"full_name"]];
+                 }
+                 NSLog(@"Array of X repos: %lu", repos.count);
+                 completionBlock(task, responseObject);
              } failure:^(NSURLSessionDataTask *task, NSError *error) {
-                    NSLog(@"Fail line 44: %@", error.localizedDescription);
-        }];
+             }];
     };
+    
+        //Call HEAD to get pagination...
+    [manager HEAD:getCurrentUserReposURL parameters:[self defaultParams]
+          success:(id)^(NSURLSessionDataTask *task) {
+              NSUInteger pagination = [self paginationFromResponseHeader:(NSHTTPURLResponse*)task.response];
+    
+                for (NSUInteger i = pagination; i > 0; i--) {
+                    GETwithPage(i);
+                }
+              return [repos copy];
+        
+        } failure:^(NSURLSessionDataTask *task, NSError *error) {NSLog(@"Failure, error: %@", error);}
+     ]; //End of HEAD request (which contains the recursive requests also).
+    return nil;
 }
 
 +(void)getMembershipforOrg:(NSString *)orgName WithCompletion:(void (^)(NSURLSessionDataTask *, NSArray *))completionBlock {
@@ -154,13 +165,13 @@ NSString *const GITHUB_API_baseURL = @"https://api.github.com";
          }];
 }
 
--(NSUInteger)paginationFromResponseHeader:(NSHTTPURLResponse*)response {
-    NSLog(@"NSURLResponse digging: %@", [[response allHeaderFields] description]);
++(NSUInteger)paginationFromResponseHeader:(NSHTTPURLResponse*)response {
+//    NSLog(@"NSURLResponse digging: %@", [[response allHeaderFields] description]);
     NSString *linkHeaderText = response.allHeaderFields[@"Link"];
-    NSLog(@"link header tedxt: %@", linkHeaderText);
+//    NSLog(@"link header tedxt: %@", linkHeaderText);
     NSString *rxPattern = @"\\d+(?=>; rel=\"last\")";
     NSString *paginationString = [linkHeaderText rx_textsForMatchesWithPattern:rxPattern][0];
-    NSLog(@"pagination string: %@", paginationString);
+//    NSLog(@"pagination string: %@", paginationString);
     
     return [paginationString integerValue];
 }
